@@ -75,17 +75,3 @@ class SportDataFetcher:
                 {"home_team": "Portugal", "away_team": "Congo"},
                 {"home_team": "Brasil", "away_team": "Inglaterra"}
             ]
-
-# -----------------------------------------------------------------------------
-# MÓDULO 2: MOTOR ESTADÍSTICO MULTIDEPORTE
-# -----------------------------------------------------------------------------
-class BetAnalyticsEngine:
-    def __init__(self):
-        pass
-
-    def analizar_partidos(self, partidos_api: list, deporte: str) -> list:
-        recomendaciones = []
-        
-        for item in partidos_api:
-            local = item.get("home_team", "Local")
-            visitante = item.get("away_team", "
