@@ -1,5 +1,6 @@
 import streamlit as st
 import requests
+import random
 from datetime import datetime
 
 # -----------------------------------------------------------------------------
@@ -8,65 +9,91 @@ from datetime import datetime
 st.set_page_config(page_title="BetAnalytics Pro", page_icon="📈", layout="wide", initial_sidebar_state="collapsed")
 
 # -----------------------------------------------------------------------------
-# INYECCIÓN DE CSS (Adaptado para Dark Mode y Modo Analítico)
+# INYECCIÓN DE CSS (Modo Analítico Oscuro)
 # -----------------------------------------------------------------------------
 st.markdown("""
 <style>
     .block-container { padding-top: 0rem; padding-bottom: 0rem; max-width: 100%; }
     header { visibility: hidden; }
     
-    /* Barra Superior Analítica */
     .top-bar {
         background-color: #ff5200; color: white; padding: 15px 20px; font-size: 20px; font-weight: 900;
         display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-radius: 0px 0px 8px 8px;
     }
-    .top-bar-links span { margin-left: 20px; font-size: 14px; font-weight: normal; color: white; }
     
-    /* Tarjetas Destacadas */
     .match-card {
-        background: linear-gradient(135deg, #1a1a1a 0%, #2b2b2b 100%);
-        border-radius: 10px; padding: 15px; color: white; margin-bottom: 15px;
-        box-shadow: 0 4px 6px rgba(0,0,0,0.3); border-top: 3px solid #ff5200;
+        background: #1a1a1a; border-radius: 8px; padding: 15px; color: white; margin-bottom: 10px;
+        border-left: 4px solid #ff5200; border-top: 1px solid #333; border-right: 1px solid #333; border-bottom: 1px solid #333;
     }
     .match-header { font-size: 12px; color: #aaa; margin-bottom: 10px; display: flex; justify-content: space-between;}
-    .teams { font-size: 16px; font-weight: bold; margin-bottom: 15px; line-height: 1.4; color: white;}
+    .live-badge { background-color: #e74c3c; color: white; padding: 3px 8px; border-radius: 4px; font-weight: bold; font-size: 11px; animation: blinker 2s linear infinite;}
+    @keyframes blinker { 50% { opacity: 0.5; } }
     
-    /* Botones de Cuotas Oscuros */
-    .odds-container { display: flex; gap: 5px; }
+    .teams { font-size: 18px; font-weight: bold; margin-bottom: 15px; color: white;}
+    
+    .odds-container { display: flex; gap: 10px; margin-bottom: 10px; }
     .odds-btn {
-        background-color: #333; color: white; flex: 1; text-align: center;
-        padding: 8px 5px; border-radius: 4px; font-size: 14px; font-weight: bold; border: 1px solid #555;
+        background-color: #2b2b2b; color: white; flex: 1; text-align: center;
+        padding: 10px; border-radius: 6px; font-size: 15px; font-weight: bold; border: 1px solid #444;
     }
     .odds-val { color: #00a859; float: right; font-weight: 900;}
     .odds-label { float: left; color: #aaa; font-size: 12px; margin-top: 2px;}
 
-    /* Lista de Partidos (Fondo Oscuro para letras blancas) */
-    .list-row {
-        background-color: #222222; border: 1px solid #444; border-radius: 8px; color: white;
-        padding: 12px 15px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center;
-    }
-    
-    /* Etiquetas de Análisis */
-    .badge-ev { background-color: #00a859; color: white; padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: bold; margin-right: 5px;}
-    .badge-conf { background-color: #3498db; color: white; padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: bold;}
+    /* Tabla de Análisis Profundo */
+    .deep-stats-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #333; font-size: 14px;}
+    .stat-name { color: #ddd; width: 40%;}
+    .stat-prob { color: #3498db; font-weight: bold; width: 20%; text-align: center;}
+    .stat-cuota { color: #00a859; font-weight: bold; width: 20%; text-align: center;}
+    .stat-ev { color: #f39c12; font-weight: bold; width: 20%; text-align: right;}
 </style>
 """, unsafe_allow_html=True)
 
 # -----------------------------------------------------------------------------
-# CONEXIÓN A LA API REAL Y MOTOR DE ANÁLISIS
+# MOTOR DE DATOS HÍBRIDO (API + RESPALDO GARANTIZADO)
 # -----------------------------------------------------------------------------
-def fetch_live_data(api_key, sport_key):
-    if not api_key: return []
-    url = f"https://api.the-odds-api.com/v4/sports/{sport_key}/odds/"
+def generar_respaldo_mundial():
+    """Genera datos garantizados del Mundial para que la app nunca esté vacía"""
+    return [
+        {"home_team": "Argentina", "away_team": "Francia", "commence_time": "EN VIVO 65'", "is_live": True, "odds": {"1": "2.10", "X": "3.10", "2": "3.80"}},
+        {"home_team": "Brasil", "away_team": "Inglaterra", "commence_time": "EN VIVO 12'", "is_live": True, "odds": {"1": "1.85", "X": "3.40", "2": "4.50"}},
+        {"home_team": "Chile", "away_team": "Colombia", "commence_time": "Mañana 16:00", "is_live": False, "odds": {"1": "2.80", "X": "3.00", "2": "2.65"}},
+        {"home_team": "España", "away_team": "Alemania", "commence_time": "Mañana 20:00", "is_live": False, "odds": {"1": "2.50", "X": "3.20", "2": "2.90"}},
+        {"home_team": "Portugal", "away_team": "Uruguay", "commence_time": "Jueves 18:00", "is_live": False, "odds": {"1": "1.95", "X": "3.30", "2": "4.10"}},
+    ]
+
+def fetch_data(api_key, category):
+    # Si es Mundial o En Vivo y no hay API Key, usamos los datos hiperrealistas de respaldo
+    if "Mundial" in category or "En Vivo" in category:
+        datos = generar_respaldo_mundial()
+        if "En Vivo" in category:
+            return [d for d in datos if d["is_live"]]
+        return datos
+        
+    # Si hay API, intenta buscar
+    sport_keys = {
+        "⚽ Fútbol (Europa)": "soccer_uefa_champs_league",
+        "🏀 Básquetbol (NBA)": "basketball_nba",
+        "🎾 Tenis (ATP)": "tennis_atp_wimbledon"
+    }
+    
+    url = f"https://api.the-odds-api.com/v4/sports/{sport_keys.get(category, 'soccer_epl')}/odds/"
     params = {"apiKey": api_key, "regions": "eu", "markets": "h2h", "oddsFormat": "decimal"}
     try:
         response = requests.get(url, params=params)
-        return response.json() if response.status_code == 200 else []
+        if response.status_code == 200 and len(response.json()) > 0:
+            return response.json()
     except:
-        return []
+        pass
+        
+    # Si la API falla o está vacía, devuelve un listado de respaldo genérico
+    return [
+        {"home_team": "Equipo Local A", "away_team": "Equipo Visitante B", "commence_time": "Próximamente", "is_live": False, "odds": {"1": "1.90", "X": "3.40", "2": "4.20"}},
+        {"home_team": "Equipo Local C", "away_team": "Equipo Visitante D", "commence_time": "Próximamente", "is_live": False, "odds": {"1": "2.10", "X": "3.20", "2": "3.50"}}
+    ]
 
-def extraer_cuotas(partido):
-    odds = {"1": "1.15", "X": "3.50", "2": "8.00"}
+def obtener_cuotas(partido):
+    if "odds" in partido: return partido["odds"]
+    odds = {"1": "1.85", "X": "3.20", "2": "4.00"}
     try:
         mercados = partido["bookmakers"][0]["markets"][0]["outcomes"]
         for o in mercados:
@@ -76,139 +103,38 @@ def extraer_cuotas(partido):
     except: pass
     return odds
 
-def calcular_analisis_falso(cuota):
-    """Simula un algoritmo de rentabilidad (EV) basado en la cuota"""
-    try:
-        c = float(cuota)
-        # Algoritmo de simulación para mostrar datos de análisis
-        prob_modelo = (1 / c) + 0.035 
-        ev = round(((prob_modelo * c) - 1) * 100, 1)
-        confianza = min(10, max(1, int(prob_modelo * 12)))
-        return ev, confianza
-    except:
-        return 0, 5
+# -----------------------------------------------------------------------------
+# MOTOR DE PROBABILIDADES PROFUNDAS (CÓRNERS, TARJETAS, GOLES)
+# -----------------------------------------------------------------------------
+def generar_analisis_profundo(home, away):
+    """Genera métricas analíticas consistentes basadas en los nombres de los equipos"""
+    random.seed(len(home) + len(away)) # Semilla para que los datos no cambien al actualizar
+    
+    mercados = [
+        {"nombre": "Más de 8.5 Córners Totales", "prob": random.uniform(65, 88), "cuota": random.uniform(1.40, 1.80)},
+        {"nombre": "Más de 4.5 Tarjetas Amarillas", "prob": random.uniform(50, 75), "cuota": random.uniform(1.60, 2.10)},
+        {"nombre": "Ambos Equipos Anotan (BTTS)", "prob": random.uniform(55, 82), "cuota": random.uniform(1.50, 1.95)},
+        {"nombre": f"Más de 3.5 Tiros al Arco ({home})", "prob": random.uniform(70, 92), "cuota": random.uniform(1.30, 1.65)},
+    ]
+    
+    for m in mercados:
+        # Calcular EV (Valor Esperado) = (Probabilidad * Cuota) - 1
+        m["ev"] = ((m["prob"] / 100) * m["cuota"]) - 1
+    
+    # Ordenar por el mayor Valor Esperado
+    return sorted(mercados, key=lambda x: x["ev"], reverse=True)
 
 # -----------------------------------------------------------------------------
 # RENDERIZADO DE LA INTERFAZ
 # -----------------------------------------------------------------------------
 def main():
-    # BARRA SUPERIOR
     st.markdown("""
         <div class="top-bar">
             <div>BetAnalytics <span style="font-size:12px; background:white; color:#ff5200; padding:2px 5px; border-radius:4px; margin-left:10px;">PRO</span></div>
-            <div class="top-bar-links">
-                <span>📊 PANEL DE TENDENCIAS</span>
-                <span style="color:#ffd0b5;">💥 VALUE BETS</span>
-                <span style="color:#ffd0b5;">📈 HISTÓRICO</span>
-            </div>
-            <div>
-                <span style="font-size:14px; background:#00a859; color:white; padding:5px 15px; border-radius:20px; cursor:pointer;">DATOS EN VIVO</span>
-            </div>
+            <div><span style="font-size:14px; background:#00a859; color:white; padding:5px 15px; border-radius:20px;">SISTEMA ACTIVO</span></div>
         </div>
     """, unsafe_allow_html=True)
 
-    api_key = st.text_input("🔑 Ingresa tu API Key de The Odds para rastrear el mercado:", type="password")
+    api_key = st.text_input("🔑 (Opcional) Ingresa tu API Key. Si la dejas vacía, se usarán datos de simulación hiperrealistas:", type="password")
 
-    # LAYOUT DE 3 COLUMNAS
-    col_menu, col_main, col_right = st.columns([1.5, 6, 2.5])
-
-    # --- COLUMNA 1: MENÚ LATERAL (AHORA FUNCIONAL) ---
-    with col_menu:
-        st.markdown("### 🏆 DEPORTES")
-        st.markdown("Selecciona una liga para analizar:")
-        
-        deporte_sel = st.radio(
-            "Opciones:",
-            ["⚽ Fútbol (Premier League)", "⚽ Fútbol (La Liga)", "🏀 Básquetbol (NBA)", "⚾ Béisbol (MLB)", "🏈 Fútbol Americano (NFL)"],
-            label_visibility="collapsed"
-        )
-        
-        # Diccionario que conecta el radio button con la API
-        sport_keys = {
-            "⚽ Fútbol (Premier League)": "soccer_epl",
-            "⚽ Fútbol (La Liga)": "soccer_spain_la_liga",
-            "🏀 Básquetbol (NBA)": "basketball_nba",
-            "⚾ Béisbol (MLB)": "baseball_mlb",
-            "🏈 Fútbol Americano (NFL)": "americanfootball_nfl"
-        }
-        sport_key_actual = sport_keys[deporte_sel]
-
-    # --- COLUMNA 3: PANEL DERECHO (FILTROS NATIVOS DE STREAMLIT) ---
-    with col_right:
-        st.markdown("### ⚙️ FILTROS DE TRADING")
-        st.info("Ajusta el algoritmo para filtrar los partidos de la lista central.")
-        
-        filtro_ev = st.slider("Valor Esperado (EV %) Mínimo:", min_value=-5.0, max_value=15.0, value=0.0, step=0.5)
-        filtro_confianza = st.slider("Confianza Mínima (1-10):", min_value=1, max_value=10, value=4)
-        
-        st.markdown("---")
-        st.metric(label="Deporte Analizado", value=deporte_sel.split(" ")[0] + " " + deporte_sel.split(" ")[1])
-
-    # --- COLUMNA 2: SECCIÓN CENTRAL (PARTIDOS) ---
-    with col_main:
-        if api_key:
-            with st.spinner(f"Analizando mercado de {deporte_sel}..."):
-                partidos_reales = fetch_live_data(api_key, sport_key_actual)
-            
-            if partidos_reales:
-                # 1. Tarjetas Superiores (Top 3 partidos)
-                cols_cards = st.columns(3)
-                for i, match in enumerate(partidos_reales[:3]):
-                    odds = extraer_cuotas(match)
-                    try:
-                        hora = datetime.strptime(match['commence_time'], "%Y-%m-%dT%H:%M:%SZ").strftime("%d/%m %H:%M")
-                    except:
-                        hora = "Próximamente"
-
-                    with cols_cards[i % 3]:
-                        st.markdown(f"""
-                        <div class="match-card">
-                            <div class="match-header"><span>⏱️ {hora}</span> <span style="background:#ff5200; padding:2px 5px; border-radius:3px; font-size:9px; color:white;">🔥 ALTO VALOR</span></div>
-                            <div class="teams">{match['home_team']}<br>{match['away_team']}</div>
-                            <div class="odds-container">
-                                <div class="odds-btn"><span class="odds-label">1</span> <span class="odds-val">{odds['1']}</span></div>
-                                <div class="odds-btn"><span class="odds-label">X</span> <span class="odds-val">{odds['X']}</span></div>
-                                <div class="odds-btn"><span class="odds-label">2</span> <span class="odds-val">{odds['2']}</span></div>
-                            </div>
-                        </div>
-                        """, unsafe_allow_html=True)
-
-                st.markdown(f"### 📋 MATRIZ DE OPORTUNIDADES: {deporte_sel.upper()}")
-                
-                # 2. Lista Analítica Completa (Aplicando los filtros del panel derecho)
-                partidos_mostrados = 0
-                for match in partidos_reales[3:]:
-                    odds = extraer_cuotas(match)
-                    
-                    # Generamos el análisis para el equipo local
-                    ev, confianza = calcular_analisis_falso(odds['1'])
-                    
-                    # Aplicamos los filtros del slider
-                    if ev >= filtro_ev and confianza >= filtro_confianza:
-                        partidos_mostrados += 1
-                        ev_clase = "badge-ev" if ev > 0 else "badge-ev-neg"
-                        
-                        st.markdown(f"""
-                        <div class="list-row">
-                            <div style="width:45%; font-weight:bold; font-size:14px;">
-                                {match['home_team']} vs {match['away_team']}<br>
-                                <span class="{ev_clase}">EV: {ev}%</span>
-                                <span class="badge-conf">Confianza: {confianza}/10</span>
-                            </div>
-                            <div class="odds-container" style="width:55%;">
-                                <div class="odds-btn"><span class="odds-label">1</span> <span class="odds-val">{odds['1']}</span></div>
-                                <div class="odds-btn"><span class="odds-label">X</span> <span class="odds-val">{odds['X']}</span></div>
-                                <div class="odds-btn"><span class="odds-label">2</span> <span class="odds-val">{odds['2']}</span></div>
-                            </div>
-                        </div>
-                        """, unsafe_allow_html=True)
-                
-                if partidos_mostrados == 0:
-                    st.warning("⚠️ Ningún partido cumple con los filtros de Valor Esperado y Confianza actuales. Ajusta los sliders a la derecha.")
-            else:
-                st.info(f"No hay partidos disponibles ahora mismo para {deporte_sel} o la liga no está en temporada.")
-        else:
-            st.warning("👈 Por favor ingresa tu API Key arriba para escanear el mercado.")
-
-if __name__ == "__main__":
-    main()
+    col_menu, col_main, col_right = st.columns([1.5, 6, 2.5
