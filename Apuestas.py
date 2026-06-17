@@ -77,7 +77,7 @@ class SportDataFetcher:
             ]
 
 # -----------------------------------------------------------------------------
-# MÓDULO 2: MOTOR ESTADÍSTICO MULTIDEPORTE (Líneas cortas anti-SyntaxError)
+# MÓDULO 2: MOTOR ESTADÍSTICO MULTIDEPORTE
 # -----------------------------------------------------------------------------
 class BetAnalyticsEngine:
     def __init__(self):
@@ -88,104 +88,4 @@ class BetAnalyticsEngine:
         
         for item in partidos_api:
             local = item.get("home_team", "Local")
-            visitante = item.get("away_team", "Visitante")
-            
-            # Semilla fija por partido para consistencia
-            np.random.seed(sum(ord(c) for c in local + visitante))
-            lista_mercados = []
-
-            # Variables auxiliares de probabilidad y cuota
-            p_alta = round(np.random.uniform(0.90, 0.97), 2)
-            p_media_alta = round(np.random.uniform(0.82, 0.93), 2)
-            p_regular = round(np.random.uniform(0.75, 0.88), 2)
-
-            c_baja = round(np.random.uniform(1.10, 1.18), 2)
-            c_media = round(np.random.uniform(1.20, 1.35), 2)
-            c_alta = round(np.random.uniform(1.35, 1.48), 2)
-
-            # ---- SELECCIÓN DE ALGORITMOS DE MERCADO POR DISCIPLINA ----
-            if "⚽" in deporte:
-                lista_mercados = [
-                    {"cat": "Goles", "name": "Más de 0.5 Goles Totales", "prob": p_alta, "cuota": c_baja, "just": "Alta efectividad ofensiva."},
-                    {"cat": "Goles", "name": "Más de 1.5 Goles Totales", "prob": p_media_alta, "cuota": c_media, "just": "Promedio combinado supera los 2.1 goles."},
-                    {"cat": "Córners", "name": "Más de 7.5 Córners Totales", "prob": p_alta, "cuota": c_media, "just": "Juego vertical por las bandas, promedio H2H alto."},
-                    {"cat": "Córners", "name": "Más de 8.5 Córners Totales", "prob": p_regular, "cuota": c_alta, "just": "Dinámica de ataque constante con rechaces defensivos."},
-                    {"cat": "Tarjetas", "name": "Más de 2.5 Tarjetas Totales", "prob": p_media_alta, "cuota": c_media, "just": "Árbitro asignado promedia más de 4.2 tarjetas."},
-                    {"cat": "Tarjetas", "name": "Más de 1 tarjeta por equipo", "prob": p_media_alta, "cuota": c_media, "just": "Partido de alta tensión competitiva."},
-                    
-                    # MERCADOS DE TIROS AL ARCO (1 O MÁS SOLICITADOS)
-                    {"cat": "Tiros al Arco", "name": f"1 o más tiros al arco de {local}", "prob": p_alta, "cuota": c_baja, "just": "Presión alta del equipo local en los primeros 15 minutos."},
-                    {"cat": "Tiros al Arco", "name": f"1 o más tiros al arco de {visitante}", "prob": p_media_alta, "cuota": c_media, "just": "Transiciones rápidas de contraataque del cuadro visitante."},
-                    {"cat": "Tiros al Arco", "name": "Ambos equipos: 1 o más tiros al arco", "prob": p_alta, "cuota": c_baja, "just": "Líneas de presión adelantadas y volumen de juego ofensivo combinado."}
-                ]
-            elif "🏀" in deporte:
-                lista_mercados = [
-                    {"cat": "Puntos", "name": "Más de 210.5 Puntos Totales", "prob": p_regular, "cuota": c_alta, "just": "Ritmo de posesiones rápido (Pace) alto."},
-                    {"cat": "Hándicap", "name": "Favorito +8.5 Hándicap Alternativo", "prob": p_media_alta, "cuota": c_media, "just": "Margen de protección óptimo."},
-                    {"cat": "Puntos Equipo", "name": f"{local} más de 100.5 puntos", "prob": p_media_alta, "cuota": c_media, "just": "Rendimiento histórico ofensivo local alto."}
-                ]
-            elif "⚾" in deporte:
-                lista_mercados = [
-                    {"cat": "Carreras", "name": "Más de 6.5 Carreras Totales", "prob": p_regular, "cuota": c_alta, "just": "Condiciones climáticas ideales para bateo."},
-                    {"cat": "Hándicap", "name": f"{local} +2.5 Run Line", "prob": p_media_alta, "cuota": c_media, "just": "Historial local sólido por la mínima."},
-                    {"cat": "Hits", "name": "Más de 12.5 Hits Combinados", "prob": p_regular, "cuota": c_media, "just": "Rotación de pitchers abridores permisiva."}
-                ]
-            elif "🏈" in deporte:
-                lista_mercados = [
-                    {"cat": "Puntos", "name": "Más de 38.5 Puntos Totales", "prob": p_media_alta, "cuota": c_baja, "just": "Sistemas ofensivos estables en zona roja."},
-                    {"cat": "Hándicap", "name": "Favorito +10.5 Hándicap Alternativo", "prob": p_alta, "cuota": c_baja, "just": "Colchón de puntos protector de tendencia."},
-                    {"cat": "Touchdowns", "name": "Más de 3.5 Touchdowns Totales", "prob": p_regular, "cuota": c_alta, "just": "Frecuencia alta de pases profundos."}
-                ]
-
-            for m in lista_mercados:
-                ev = (m["prob"] * m["cuota"]) - 1
-                confianza = int((m["prob"] * 6) + (1 / m["cuota"] * 4))
-                confianza = min(10, max(1, confianza))
-
-                recomendaciones.append({
-                    "Deporte": deporte,
-                    "Partido": f"{local} vs {visitante}",
-                    "Categoría": m["cat"],
-                    "Mercado Recommended": m["name"],
-                    "Probabilidad Estimada": f"{m['prob'] * 100:.0f}%",
-                    "Cuota Actual": m["cuota"],
-                    "Valor Esperado (EV)": round(ev, 3),
-                    "Nivel de Confianza": confianza,
-                    "Justificación Estadística": m["just"],
-                    "es_value_bet": ev > 0
-                })
-                
-        return recomendaciones
-
-# -----------------------------------------------------------------------------
-# MÓDULO 3: INTERFAZ DE USUARIO MULTIDEPORTE PREMIUM
-# -----------------------------------------------------------------------------
-def main():
-    st.title("🍊 BETANALYTICS MULTI-SPORT PLATFORM")
-    st.subheader("Análisis Automatizado de Alta Probabilidad — Fútbol, NBA, MLB y NFL")
-    st.markdown("---")
-
-    st.sidebar.header("🔑 CONEXIÓN API")
-    user_api_key = st.sidebar.text_input("Ingresa tu The Odds API Key (Opcional):", type="password")
-    
-    st.sidebar.markdown("---")
-    st.sidebar.header("🏆 SELECCIÓN DE DEPORTE")
-    deporte_activo = st.sidebar.radio(
-        "Elige una pizarra de juego:",
-        options=[
-            "⚽ Fútbol (Mundial)",
-            "🏀 Básquetbol (NBA)",
-            "⚾ Béisbol (MLB)",
-            "🏈 Fútbol Americano (NFL)"
-        ]
-    )
-    
-    st.sidebar.markdown("---")
-    st.sidebar.header("⚙️ FILTROS")
-    min_confianza = st.sidebar.slider("Confianza Mínima", min_value=1, max_value=10, value=5)
-    solo_value_bets = st.sidebar.checkbox("Mostrar solo Value Bets (EV > 0)", value=False)
-
-    if not user_api_key:
-        st.info("💡 **Modo Simulación Activo:** Mostrando el motor analítico con datos optimizados de respaldo. Escribe tu API Key para datos de mercado en vivo.")
-
-    fetcher = SportDataFetcher(user_api_key)
+            visitante = item.get("away_team", "
