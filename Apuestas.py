@@ -102,26 +102,7 @@ class BetAnalyticsEngine:
             c_alta = round(np.random.uniform(1.35, 1.48), 2)
 
             if "⚽" in deporte:
-                lista_mercados = [
-                    {"cat": "Goles", "name": "Más de 0.5 Goles Totales", "prob": p_alta, "cuota": c_baja, "just": "Alta efectividad ofensiva."},
-                    {"cat": "Goles", "name": "Más de 1.5 Goles Totales", "prob": p_media_alta, "cuota": c_media, "just": "Promedio supera los 2.1 goles."},
-                    {"cat": "Córners", "name": "Más de 7.5 Córners Totales", "prob": p_alta, "cuota": c_media, "just": "Juego vertical por las bandas."},
-                    {"cat": "Córners", "name": "Más de 8.5 Córners Totales", "prob": p_regular, "cuota": c_alta, "just": "Alta tasa de rechaces defensivos."},
-                    {"cat": "Tarjetas", "name": "Más de 2.5 Tarjetas Totales", "prob": p_media_alta, "cuota": c_media, "just": "Árbitro promedia más de 4.2 tarjetas."},
-                    {"cat": "Tarjetas", "name": "Más de 1 tarjeta por equipo", "prob": p_media_alta, "cuota": c_media, "just": "Partido de alta tensión."},
-                    
-                    # PROBABILIDADES DE 1 O MÁS TIROS SOLICITADAS
-                    {"cat": "Tiros al Arco", "name": f"1 o más tiros al arco de {local}", "prob": p_alta, "cuota": c_baja, "just": "Presión alta del equipo local."},
-                    {"cat": "Tiros al Arco", "name": f"1 o más tiros al arco de {visitante}", "prob": p_media_alta, "cuota": c_media, "just": "Contraataques rápidos del visitante."},
-                    {"cat": "Tiros al Arco", "name": "Ambos equipos: 1 o más tiros al arco", "prob": p_alta, "cuota": c_baja, "just": "Volumen de juego ofensivo combinado."}
-                ]
-            elif "🏀" in deporte:
-                lista_mercados = [
-                    {"cat": "Puntos", "name": "Más de 210.5 Puntos Totales", "prob": p_regular, "cuota": c_alta, "just": "Ritmo de posesiones rápido (Pace) alto."},
-                    {"cat": "Hándicap", "name": "Favorito +8.5 Hándicap Alternativo", "prob": p_media_alta, "cuota": c_media, "just": "Margen de protección óptimo."},
-                    {"cat": "Puntos Equipo", "name": f"{local} más de 100.5 puntos", "prob": p_media_alta, "cuota": c_media, "just": "Ofensiva local alta."}
-                ]
-            elif "⚾" in deporte:
-                lista_mercados = [
-                    {"cat": "Carreras", "name": "Más de 6.5 Carreras Totales", "prob": p_regular, "cuota": c_alta, "just": "Clima ideal para bateo."},
-                    {"cat": "Hándicap", "name": f"{local} +2.5
+                # Nombres de mercados ultra cortos inmunes a cortes de línea
+                m_loc = f"1 o más tiros: {local}"
+                m_vis = f"1 o más tiros: {visitante}"
+                lista_mercados =
