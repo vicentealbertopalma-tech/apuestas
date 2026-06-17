@@ -15,7 +15,7 @@ st.set_page_config(
 )
 
 # -----------------------------------------------------------------------------
-# MÓDULO 1: RECOLECCIÓN DE DATOS REALES (The Odds API)
+# MÓDULO 1: RECOLECCIÓN DE DATOS
 # -----------------------------------------------------------------------------
 class SportDataFetcher:
     def __init__(self, api_key: str):
@@ -77,7 +77,7 @@ class SportDataFetcher:
             ]
 
 # -----------------------------------------------------------------------------
-# MÓDULO 2: MOTOR ESTADÍSTICO MULTIDEPORTE
+# MÓDULO 2: MOTOR ESTADÍSTICO ANTI-FALLOS
 # -----------------------------------------------------------------------------
 class BetAnalyticsEngine:
     def __init__(self):
@@ -93,16 +93,4 @@ class BetAnalyticsEngine:
             np.random.seed(sum(ord(c) for c in local + visitante))
             lista_mercados = []
 
-            p_alta = round(np.random.uniform(0.90, 0.97), 2)
-            p_media_alta = round(np.random.uniform(0.82, 0.93), 2)
-            p_regular = round(np.random.uniform(0.75, 0.88), 2)
-
-            c_baja = round(np.random.uniform(1.10, 1.18), 2)
-            c_media = round(np.random.uniform(1.20, 1.35), 2)
-            c_alta = round(np.random.uniform(1.35, 1.48), 2)
-
-            if "⚽" in deporte:
-                # Nombres de mercados ultra cortos inmunes a cortes de línea
-                m_loc = f"1 o más tiros: {local}"
-                m_vis = f"1 o más tiros: {visitante}"
-                lista_mercados =
+            p
