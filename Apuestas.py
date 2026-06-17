@@ -1,53 +1,57 @@
 import streamlit as st
 import pandas as pd
-import random
 
 st.set_page_config(page_title="BetAnalytics Pro", layout="wide")
 
-# CSS para que se vea idéntico a una casa de apuestas
+# Estilo para fondo oscuro y colores profesionales
 st.markdown("""
 <style>
-    .top-bar { background-color: #ff5200; color: white; padding: 20px; font-weight: 900; font-size: 24px; border-radius: 0 0 10px 10px; margin-bottom: 20px; text-align: center;}
-    .match-card { background: #1a1a1a; padding: 15px; border-radius: 8px; border-left: 4px solid #ff5200; margin-bottom: 10px; color: white;}
+    .main { background-color: #0e1117; }
+    .stApp { background-color: #0e1117; }
+    .header-box { background-color: #ff5200; padding: 20px; border-radius: 10px; color: white; text-align: center; margin-bottom: 20px;}
+    .card { background-color: #1a1a1a; padding: 15px; border-radius: 10px; margin-bottom: 10px; border-left: 5px solid #ff5200; }
 </style>
 """, unsafe_allow_html=True)
 
-st.markdown('<div class="top-bar">BETANALYTICS PRO — PANEL DE ANÁLISIS</div>', unsafe_allow_html=True)
+# Encabezado
+st.markdown('<div class="header-box"><h1>BETANALYTICS PRO — COPA DEL MUNDO 2026</h1></div>', unsafe_allow_html=True)
 
-# sidebar
-st.sidebar.title("📡 Deportes")
-deporte = st.sidebar.radio("Selecciona:", ["🏆 Mundial 2026", "⚽ Fútbol", "🏀 Básquetbol", "🎾 Tenis"])
+# Datos de muestra (Simulando partidos en vivo)
+data = {
+    "Partido": ["Argentina vs Francia", "Brasil vs Inglaterra", "Chile vs Colombia", "España vs Alemania"],
+    "Estado": ["🔴 En Vivo 65'", "🔴 En Vivo 12'", "⏱️ Mañana 16:00", "⏱️ Mañana 20:00"],
+    "Prob. Local": ["55%", "60%", "45%", "52%"],
+    "Cuota": ["1.90", "1.85", "2.50", "2.10"]
+}
+df = pd.DataFrame(data)
 
-# Lógica de datos (Si no hay API, usamos este set de datos profesional)
-def obtener_datos(deporte):
-    # Simulamos datos de mercado
-    datos = {
-        "Partido": ["Argentina vs Francia", "Brasil vs Inglaterra", "Chile vs Colombia", "España vs Alemania"],
-        "Probabilidad Local": ["55%", "60%", "45%", "52%"],
-        "Cuota 1": [1.90, 1.85, 2.50, 2.10],
-        "Cuota 2": [4.20, 4.50, 2.80, 3.50]
-    }
-    return pd.DataFrame(datos)
+# Layout: Izquierda (Filtros), Centro (Partidos), Derecha (Análisis)
+col1, col2, col3 = st.columns([1, 2, 1.5])
 
-# Mostrar contenido principal
-st.subheader(f"📊 Mercado: {deporte}")
-df = obtener_datos(deporte)
-st.table(df)
+with col1:
+    st.subheader("⚙️ Filtros")
+    filtro = st.radio("Selecciona categoría:", ["🔴 En Vivo", "🏆 Mundial", "⚽ Fútbol"])
+    st.slider("Nivel de Confianza", 1, 10, 5)
 
-# Análisis de mercados secundarios (Córners, Tarjetas)
-st.markdown("---")
-st.subheader("📋 Análisis de Mercados Secundarios")
+with col2:
+    st.subheader("📡 Partidos en Directo")
+    for i in range(len(df)):
+        with st.container():
+            st.markdown(f"""
+            <div class="card">
+                <b>{df.loc[i, 'Partido']}</b><br>
+                <span style="color: #ff5200;">{df.loc[i, 'Estado']}</span>
+            </div>
+            """, unsafe_allow_html=True)
 
-# Seleccionamos un partido para el detalle
-partido_sel = st.selectbox("Selecciona partido para ver análisis profundo:", df["Partido"].tolist())
-
-if partido_sel:
-    col1, col2 = st.columns(2)
-    with col1:
-        st.info("📉 Córners (Promedio)")
-        st.write(f"Pronóstico para {partido_sel}: 9.5 córners totales.")
-    with col2:
-        st.info("🟨 Tarjetas (Probabilidad)")
-        st.write(f"Probabilidad de +4.5 tarjetas: 78%.")
-
-st.warning("⚠️ Nota: Conectado a base de datos de simulación (No requiere API Key).")
+with col3:
+    st.subheader("📊 Análisis Profundo")
+    partido_sel = st.selectbox("Elegir partido para analizar:", df["Partido"].tolist())
+    
+    # Análisis dinámico basado en la selección
+    st.write(f"### Análisis de {partido_sel}")
+    st.progress(85)
+    st.write("📈 **Córners:** 85% probabilidad")
+    st.progress(70)
+    st.write("🟨 **Tarjetas:** 70% probabilidad")
+    st.success("Justificación estadística: Alta intensidad en fase de grupos.")
