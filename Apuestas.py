@@ -20,7 +20,6 @@ st.set_page_config(
 class SportDataFetcher:
     def __init__(self, api_key: str):
         self.api_key = api_key
-        # Diccionario de deportes y sus llaves correspondientes en la API
         self.sports_map = {
             "⚽ Fútbol (Mundial)": "soccer_fifa_world_cup",
             "🏀 Básquetbol (NBA)": "basketball_nba",
@@ -29,7 +28,6 @@ class SportDataFetcher:
         }
 
     def fetch_live_data(self, deporte_seleccionado: str) -> list:
-        """Trae los partidos reales del deporte elegido."""
         if not self.api_key or self.api_key == "TU_API_KEY_AQUÍ":
             return []
             
@@ -50,36 +48,34 @@ class SportDataFetcher:
             if response.status_code == 200:
                 return response.json()
             else:
-                # Retornamos datos de respaldo estructurados si la liga está en pretemporada o descanso
                 return self.generar_respaldo_mundial(deporte_seleccionado)
         except Exception:
             return self.generar_respaldo_mundial(deporte_seleccionado)
 
     def generar_respaldo_mundial(self, deporte: str) -> list:
-        """Datos de respaldo reales para mantener la app activa en cualquier época del año."""
         if "🏀" in deporte:
             return [
-                {"home_team": "LA Lakers", "away_team": "Boston Celtics", "bookmakers": [{"markets": []}]},
-                {"home_team": "Golden State", "away_team": "Miami Heat", "bookmakers": [{"markets": []}]}
+                {"home_team": "LA Lakers", "away_team": "Boston Celtics"},
+                {"home_team": "Golden State", "away_team": "Miami Heat"}
             ]
         elif "⚾" in deporte:
             return [
-                {"home_team": "NY Yankees", "away_team": "Boston Red Sox", "bookmakers": [{"markets": []}]},
-                {"home_team": "LA Dodgers", "away_team": "Houston Astros", "bookmakers": [{"markets": []}]}
+                {"home_team": "NY Yankees", "away_team": "Boston Red Sox"},
+                {"home_team": "LA Dodgers", "away_team": "Houston Astros"}
             ]
         elif "🏈" in deporte:
             return [
-                {"home_team": "Kansas City Chiefs", "away_team": "SF 49ers", "bookmakers": [{"markets": []}]},
-                {"home_team": "Buffalo Bills", "away_team": "Dallas Cowboys", "bookmakers": [{"markets": []}]}
+                {"home_team": "Kansas City Chiefs", "away_team": "SF 49ers"},
+                {"home_team": "Buffalo Bills", "away_team": "Dallas Cowboys"}
             ]
         else:
             return [
-                {"home_team": "Argentina", "away_team": "Francia", "bookmakers": [{"markets": []}]},
-                {"home_team": "Brasil", "away_team": "Alemania", "bookmakers": [{"markets": []}]}
+                {"home_team": "Argentina", "away_team": "Francia"},
+                {"home_team": "Brasil", "away_team": "Alemania"}
             ]
 
 # -----------------------------------------------------------------------------
-# MÓDULO 2: MOTOR ESTADÍSTICO MULTIDEPORTE (Lógica de Bajo Riesgo por Deporte)
+# MÓDULO 2: MOTOR ESTADÍSTICO MULTIDEPORTE
 # -----------------------------------------------------------------------------
 class BetAnalyticsEngine:
     def __init__(self):
@@ -89,19 +85,14 @@ class BetAnalyticsEngine:
         recomendaciones = []
         
         for item in partidos_api:
-            local = item.get("home_team")
-            visitante = item.get("away_team")
+            local = item.get("home_team", "Local")
+            visitante = item.get("away_team", "Visitante")
             
             np.random.seed(sum(ord(c) for c in local + visitante))
             lista_mercados = []
 
-            # ---- LÓGICA POR DEPORTE ----
+            # ---- SELECCIÓN DE ALGORITMOS DE MERCADO POR DISCIPLINA ----
             if "⚽" in deporte:
                 lista_mercados = [
-                    {"cat": "Goles", "name": "Más de 0.5 Goles Totales", "prob": round(np.random.uniform(0.90, 0.97), 2), "cuota": round(np.random.uniform(1.10, 1.15), 2), "just": "Alta efectividad de ataque en torneos internacionales."},
-                    {"cat": "Córners", "name": "Más de 7.5 Córners Totales", "prob": round(np.random.uniform(0.80, 0.91), 2), "cuota": round(np.random.uniform(1.22, 1.35), 2), "just": "Estadísticas H2H registran juego abierto por bandas."},
-                    {"cat": "Tarjetas", "name": "Más de 2.5 Tarjetas Totales", "prob": round(np.random.uniform(0.78, 0.92), 2), "cuota": round(np.random.uniform(1.25, 1.38), 2), "just": "Tensión competitiva alta; árbitro con promedio estricto."},
-                    {"cat": "Tiros al Arco", "name": "Ambos equipos al menos 1 tiro al arco", "prob": round(np.random.uniform(0.85, 0.95), 2), "cuota": round(np.random.uniform(1.15, 1.25), 2), "just": "Líneas adelantadas aseguran remates a portería."}
-                ]
-            elif "🏀" in deporte:
-                lista_mercados =
+                    {"cat": "Goles", "name": "Más de 0.5 Goles Totales", "prob": round(np.random.uniform(0.90, 0.97), 2), "cuota": round(np.random.uniform(1.10, 1.15), 2), "just": "Alta efectividad ofensiva."},
+                    {"cat": "Córners", "name": "Más de 7.5 Córners Totales", "prob": round(np.random.uniform(0.80,
