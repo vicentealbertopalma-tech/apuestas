@@ -1,78 +1,40 @@
 import streamlit as st
-import requests
-import random
-from datetime import datetime
+import pandas as pd
 
-# Configuración de página
-st.set_page_config(
-    page_title="BetAnalytics Pro", 
-    page_icon="📈", 
-    layout="wide", 
-    initial_sidebar_state="collapsed"
-)
+st.set_page_config(page_title="BetAnalytics Pro", layout="wide")
 
-# Estilos CSS
+# Barra Superior
 st.markdown("""
 <style>
-    .block-container { padding-top: 0rem; padding-bottom: 0rem; max-width: 100%; }
-    header { visibility: hidden; }
-    .top-bar { background-color: #ff5200; color: white; padding: 15px; font-weight: 900; border-radius: 0 0 8px 8px; }
-    .match-card { background: #1a1a1a; border-radius: 8px; padding: 15px; color: white; margin-bottom: 10px; border-left: 4px solid #ff5200; }
-    .stat-row { display: flex; justify-content: space-between; padding: 8px; border-bottom: 1px solid #333; }
+    .top-bar { background-color: #ff5200; color: white; padding: 20px; font-weight: 900; font-size: 24px; border-radius: 0 0 10px 10px; }
+    .metric-card { background: #1a1a1a; padding: 20px; border-radius: 10px; border-top: 4px solid #ff5200; }
 </style>
+<div class="top-bar">BETANALYTICS PRO — COPA DEL MUNDO 2026</div>
 """, unsafe_allow_html=True)
 
-# Datos de respaldo (si la API falla o está vacía)
-def generar_respaldo():
-    return [
-        {"home_team": "Argentina", "away_team": "Francia", "commence_time": "EN VIVO", "odds": {"1": "2.10", "X": "3.10", "2": "3.80"}},
-        {"home_team": "Brasil", "away_team": "Inglaterra", "commence_time": "EN VIVO", "odds": {"1": "1.85", "X": "3.40", "2": "4.50"}}
-    ]
+# Métricas Globales
+c1, c2, c3, c4 = st.columns(4)
+c1.metric("Partidos Hoy", "54")
+c2.metric("Mercados Analizados", "432")
+c3.metric("Value Bets", "404")
+c4.metric("Confianza", "7.6/10")
 
-# Análisis profundo
-def generar_analisis(home, away):
-    random.seed(len(home) + len(away))
-    mercados = [
-        {"nombre": "Córners Totales", "prob": random.uniform(65, 88), "cuota": 1.60},
-        {"nombre": "Tarjetas Amarillas", "prob": random.uniform(50, 75), "cuota": 1.90},
-        {"nombre": "Tiros al Arco", "prob": random.uniform(70, 92), "cuota": 1.50}
-    ]
-    return mercados
+st.markdown("---")
 
-# Interfaz
-def main():
-    st.markdown('<div class="top-bar">BetAnalytics PRO - Sistema Analítico</div>', unsafe_allow_html=True)
-    
-    # Definición de columnas con seguridad (separadas para evitar errores de sintaxis)
-    cols = st.columns([1.5, 6, 2.5])
-    
-    with cols[0]:
-        st.markdown("### 📡 Categorías")
-        cat = st.radio("M", ["🔴 En Vivo", "🏆 Mundial", "⚽ Fútbol"], label_visibility="collapsed")
-        
-    with cols[2]:
-        st.markdown("### ⚙️ Filtros")
-        prob = st.slider("Probabilidad Mínima:", 50, 95, 65)
-        
-    with cols[1]:
-        partidos = generar_respaldo()
-        for p in partidos:
-            st.markdown(f"""
-            <div class="match-card">
-                <div style="font-weight:bold; font-size:18px;">{p['home_team']} vs {p['away_team']}</div>
-            </div>
-            """, unsafe_allow_html=True)
-            
-            with st.expander("📊 Ver análisis profundo"):
-                data = generar_analisis(p['home_team'], p['away_team'])
-                for m in data:
-                    if m['prob'] >= prob:
-                        st.markdown(f"""
-                        <div class="stat-row">
-                            <span>{m['nombre']}</span>
-                            <span style="color:#00a859;">{m['prob']:.1f}%</span>
-                        </div>
-                        """, unsafe_allow_html=True)
+# Filtros
+col_izq, col_der = st.columns([1, 3])
+with col_izq:
+    st.subheader("⚙️ Filtros de Trading")
+    st.slider("Nivel de Confianza", 1, 10, 5)
+    st.checkbox("Filtrar solo Value Bets (EV > 0)")
 
-if __name__ == "__main__":
-    main()
+with col_der:
+    st.subheader("🏆 Matriz de Oportunidades")
+    # Tabla de ejemplo
+    data = {
+        "Partido": ["Argentina vs Algeria", "Portugal vs Congo"],
+        "Mercado": ["Más 0.5 Goles", "Más 7.5 Córners"],
+        "Probabilidad": ["90%", "91%"],
+        "EV": ["+0.026", "+0.229"]
+    }
+    st.table(pd.DataFrame(data))
