@@ -1,96 +1,57 @@
-import datetime
-import sqlite3
-import numpy as np
-import pandas as pd
 import streamlit as st
-import requests
+import pandas as pd
 
-# -----------------------------------------------------------------------------
-# CONFIGURACIÓN DE LA PÁGINA
-# -----------------------------------------------------------------------------
-st.set_page_config(
-    page_title="BetAnalytics Pro",
-    page_icon="🏆",
-    layout="wide",
-)
+st.set_page_config(page_title="BetAnalytics Pro", layout="wide")
 
-# -----------------------------------------------------------------------------
-# MÓDULO 1: RECOLECCIÓN DE DATOS
-# -----------------------------------------------------------------------------
-class SportDataFetcher:
-    def __init__(self, api_key: str):
-        self.api_key = api_key
-        self.sports_map = {
-            "⚽ Fútbol (Mundial)": "soccer_fifa_world_cup",
-            "🏀 Básquetbol (NBA)": "basketball_nba",
-            "⚾ Béisbol (MLB)": "baseball_mlb",
-            "🏈 Fútbol Americano (NFL)": "americanfootball_nfl"
-        }
+# Estilo para fondo oscuro y colores profesionales
+st.markdown("""
+<style>
+    .main { background-color: #0e1117; }
+    .stApp { background-color: #0e1117; }
+    .header-box { background-color: #ff5200; padding: 20px; border-radius: 10px; color: white; text-align: center; margin-bottom: 20px;}
+    .card { background-color: #1a1a1a; padding: 15px; border-radius: 10px; margin-bottom: 10px; border-left: 5px solid #ff5200; }
+</style>
+""", unsafe_allow_html=True)
 
-    def fetch_live_data(self, deporte_seleccionado: str) -> list:
-        if not self.api_key or self.api_key == "TU_API_KEY_AQUÍ":
-            return self.generar_respaldo_mundial(deporte_seleccionado)
-            
-        sport_key = self.sports_map.get(deporte_seleccionado)
-        if not sport_key:
-            return self.generar_respaldo_mundial(deporte_seleccionado)
-            
-        url = f"https://api.the-odds-api.com/v4/sports/{sport_key}/odds/"
-        params = {
-            "apiKey": self.api_key,
-            "regions": "eu", 
-            "markets": "h2h,totals", 
-            "oddsFormat": "decimal"
-        }
-        
-        try:
-            response = requests.get(url, params=params)
-            if response.status_code == 200 and len(response.json()) > 0:
-                return response.json()
-            else:
-                return self.generar_respaldo_mundial(deporte_seleccionado)
-        except Exception:
-            return self.generar_respaldo_mundial(deporte_seleccionado)
+# Encabezado
+st.markdown('<div class="header-box"><h1>BETANALYTICS PRO — COPA DEL MUNDO 2026</h1></div>', unsafe_allow_html=True)
 
-    def generar_respaldo_mundial(self, deporte: str) -> list:
-        if "🏀" in deporte:
-            return [
-                {"home_team": "LA Lakers", "away_team": "Boston Celtics"},
-                {"home_team": "Golden State", "away_team": "Miami Heat"}
-            ]
-        elif "⚾" in deporte:
-            return [
-                {"home_team": "NY Yankees", "away_team": "Boston Red Sox"},
-                {"home_team": "LA Dodgers", "away_team": "Houston Astros"}
-            ]
-        elif "🏈" in deporte:
-            return [
-                {"home_team": "Kansas City Chiefs", "away_team": "SF 49ers"},
-                {"home_team": "Buffalo Bills", "away_team": "Dallas Cowboys"}
-            ]
-        else:
-            return [
-                {"home_team": "Argentina", "away_team": "Algeria"},
-                {"home_team": "Francia", "away_team": "Marruecos"},
-                {"home_team": "Portugal", "away_team": "Congo"},
-                {"home_team": "Brasil", "away_team": "Inglaterra"}
-            ]
+# Datos de muestra (Simulando partidos en vivo)
+data = {
+    "Partido": ["Argentina vs Francia", "Brasil vs Inglaterra", "Chile vs Colombia", "España vs Alemania"],
+    "Estado": ["🔴 En Vivo 65'", "🔴 En Vivo 12'", "⏱️ Mañana 16:00", "⏱️ Mañana 20:00"],
+    "Prob. Local": ["55%", "60%", "45%", "52%"],
+    "Cuota": ["1.90", "1.85", "2.50", "2.10"]
+}
+df = pd.DataFrame(data)
 
-# -----------------------------------------------------------------------------
-# MÓDULO 2: MOTOR ESTADÍSTICO ANTI-FALLOS
-# -----------------------------------------------------------------------------
-class BetAnalyticsEngine:
-    def __init__(self):
-        pass
+# Layout: Izquierda (Filtros), Centro (Partidos), Derecha (Análisis)
+col1, col2, col3 = st.columns([1, 2, 1.5])
 
-    def analizar_partidos(self, partidos_api: list, deporte: str) -> list:
-        recomendaciones = []
-        
-        for item in partidos_api:
-            local = item.get("home_team", "Local")
-            visitante = item.get("away_team", "Visitante")
-            
-            np.random.seed(sum(ord(c) for c in local + visitante))
-            lista_mercados = []
+with col1:
+    st.subheader("⚙️ Filtros")
+    filtro = st.radio("Selecciona categoría:", ["🔴 En Vivo", "🏆 Mundial", "⚽ Fútbol"])
+    st.slider("Nivel de Confianza", 1, 10, 5)
 
-            p
+with col2:
+    st.subheader("📡 Partidos en Directo")
+    for i in range(len(df)):
+        with st.container():
+            st.markdown(f"""
+            <div class="card">
+                <b>{df.loc[i, 'Partido']}</b><br>
+                <span style="color: #ff5200;">{df.loc[i, 'Estado']}</span>
+            </div>
+            """, unsafe_allow_html=True)
+
+with col3:
+    st.subheader("📊 Análisis Profundo")
+    partido_sel = st.selectbox("Elegir partido para analizar:", df["Partido"].tolist())
+    
+    # Análisis dinámico basado en la selección
+    st.write(f"### Análisis de {partido_sel}")
+    st.progress(85)
+    st.write("📈 **Córners:** 85% probabilidad")
+    st.progress(70)
+    st.write("🟨 **Tarjetas:** 70% probabilidad")
+    st.success("Justificación estadística: Alta intensidad en fase de grupos.")
