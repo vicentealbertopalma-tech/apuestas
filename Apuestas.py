@@ -6,7 +6,7 @@ import streamlit as st
 import requests
 
 # -----------------------------------------------------------------------------
-# CONFIGURACIÓ DE LA PÀGINA (Modo Premium Multideporte)
+# CONFIGURACIÓN DE LA PÁGINA (Modo Premium Multideporte)
 # -----------------------------------------------------------------------------
 st.set_page_config(
     page_title="BetAnalytics Pro - Multideporte",
@@ -88,11 +88,11 @@ class BetAnalyticsEngine:
             local = item.get("home_team", "Local")
             visitante = item.get("away_team", "Visitante")
             
-            # Semilla fija por partido
+            # Semilla fija por partido para consistencia
             np.random.seed(sum(ord(c) for c in local + visitante))
             lista_mercados = []
 
-            # ---- GENERACIÓN DE PROBABILIDADES (Líneas ultra cortas de seguridad) ----
+            # Variables auxiliares cortas de probabilidad y cuota
             p_alta = round(np.random.uniform(0.90, 0.97), 2)
             p_media_alta = round(np.random.uniform(0.82, 0.93), 2)
             p_regular = round(np.random.uniform(0.75, 0.88), 2)
@@ -152,4 +152,87 @@ class BetAnalyticsEngine:
 # MÓDULO 3: INTERFAZ DE USUARIO MULTIDEPORTE PREMIUM
 # -----------------------------------------------------------------------------
 def main():
-    st.title("🍊 BETANALYTICS
+    st.title("🍊 BETANALYTICS MULTI-SPORT PLATFORM")
+    st.subheader("Análisis Automatizado de Alta Probabilidad — Fútbol, NBA, MLB y NFL")
+    st.markdown("---")
+
+    st.sidebar.header("🔑 CONEXIÓN API")
+    user_api_key = st.sidebar.text_input("Ingresa tu The Odds API Key:", type="password")
+    
+    st.sidebar.markdown("---")
+    st.sidebar.header("🏆 SELECCIÓN DE DEPORTE")
+    deporte_activo = st.sidebar.radio(
+        "Elige una pizarra de juego:",
+        options=[
+            "⚽ Fútbol (Mundial)",
+            "🏀 Básquetbol (NBA)",
+            "⚾ Béisbol (MLB)",
+            "🏈 Fútbol Americano (NFL)"
+        ]
+    )
+    
+    st.sidebar.markdown("---")
+    st.sidebar.header("⚙️ FILTROS")
+    min_confianza = st.sidebar.slider("Confianza Mínima", min_value=1, max_value=10, value=5)
+    solo_value_bets = st.sidebar.checkbox("Mostrar solo Value Bets (EV > 0)", value=False)
+
+    if not user_api_key:
+        st.info("👋 **¡Bienvenido a tu Central Multideportiva!** Para sincronizar las pizarras con los datos actuales, introduce tu API Key en la barra de la izquierda.")
+        return
+
+    fetcher = SportDataFetcher(user_api_key)
+    engine = BetAnalyticsEngine()
+
+    with st.spinner(f"Cargando cuotas y tendencias para {deporte_activo}..."):
+        datos_api = fetcher.fetch_live_data(deporte_activo)
+
+    if datos_api:
+        analisis_completo = engine.analizar_partidos(datos_api, deporte_activo)
+        
+        if analisis_completo:
+            df = pd.DataFrame(analisis_completo)
+            
+            if solo_value_bets:
+                df = df[df["es_value_bet"] == True]
+            df = df[df["Nivel de Confianza"] >= min_confianza]
+
+            col1, col2, col3, col4 = st.columns(4)
+            with col1:
+                st.metric(label="🏟️ Eventos Disponibles", value=len(datos_api))
+            with col2:
+                st.metric(label="📊 Mercados Calculados", value=len(df))
+            with col3:
+                val_count = df["es_value_bet"].sum() if not df.empty else 0
+                st.metric(label="💥 Value Bets", value=int(val_count))
+            with col4:
+                prom_conf = df["Nivel de Confianza"].mean() if not df.empty else 0
+                st.metric(label="🎯 Confianza Pizarra", value=f"{prom_conf:.1f}/10")
+
+            st.markdown("---")
+            st.markdown(f"### 📋 Recomendaciones de Bajo Riesgo para: {deporte_activo}")
+
+            columns_display = [
+                "Partido", "Categoría", "Mercado Recomendado", "Probabilidad Estimada", 
+                "Cuota Actual", "Valor Esperado (EV)", "Nivel de Confianza", "Justificación Estadística"
+            ]
+
+            if not df.empty:
+                df_display = df[columns_display]
+                st.dataframe(
+                    df_display.style.background_gradient(subset=["Valor Esperado (EV)"], cmap="RdYlGn"), 
+                    use_container_width=True, 
+                    height=400
+                )
+            else:
+                st.info("No hay jugadas disponibles que superen los umbrales de tus filtros en este deporte.")
+        else:
+            st.warning("Los mercados de este deporte no arrojaron probabilidades consistentes hoy.")
+    else:
+        st.warning("No se recibieron datos activos para este deporte. Intenta forzar la recarga.")
+
+    st.markdown("---")
+    if st.button("🔄 Forzar Sincronización Multideporte"):
+        st.rerun()
+
+if __name__ == "__main__":
+    main()
